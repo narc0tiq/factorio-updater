@@ -75,7 +75,7 @@ Wrote /tmp/core-linux64-0.12.2-0.12.3-update.zip, apply with `factorio --apply-u
 
 ## License ##
 
-The source of **Factorio Update Helperr** is Copyright 2015 Octav "narc" Sandulescu. It
+The source of **Factorio Update Helper** is Copyright 2015 Octav "narc" Sandulescu. It
 is licensed under the [MIT license][mit], available in this package in the file
 [LICENSE.md](LICENSE.md).
 
