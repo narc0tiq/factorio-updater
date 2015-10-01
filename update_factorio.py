@@ -5,14 +5,18 @@ import argparse
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
 parser.add_argument('-d', '--dry-run', action='store_true', dest='dry_run',
                     help="Don't download files, just state which updates would be downloaded.")
+parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                    help="Print URLs and stuff as they happen.")
+parser.add_argument('-l', '--list-packages', action='store_true', dest='list_packages',
+                    help="Print a list of valid packages (e.g., 'core-linux64', etc.).")
 parser.add_argument('-u', '--user',
                     help="Your Factorio updater username, from player-data.json.")
 parser.add_argument('-t', '--token',
                     help="Your Factorio updater token, also from player-data.json.")
 parser.add_argument('-p', '--package', default='core-linux64',
-                    choices=['core-linux32', 'core-linux64', 'core-mac', 'core-win32', 'core-win64'],
                     help="Which Factorio package to look for updates for, "
-                    "e.g., core-linux64 for a 64-bit Linux Factorio.")
+                    "e.g., core-linux64 for a 64-bit Linux Factorio. Use --list-packages to "
+                    "fetch an updated list.")
 parser.add_argument('-f', '--for-version',
                     help="Which Factorio version you currently have, e.g., 0.12.2.")
 parser.add_argument('-O', '--output-path', default='/tmp',
@@ -24,15 +28,19 @@ parser.add_argument('-x', '--experimental', action='store_true', dest='experimen
 class DownloadFailed(Exception): pass
 
 
+glob = { 'verbose': False }
+
 def version_key(v):
     if v is None:
         return []
     return [int(x) for x in re.sub(r'(\.0+)*$','', v).split(".")]
 
 
-def get_updater_data(user, updater_token):
-    payload = {'username': user, 'token': updater_token, 'apiVersion': 2}
+def get_updater_data(user, token):
+    payload = {'username': user, 'token': token, 'apiVersion': 2}
     r = requests.get('https://www.factorio.com/updater/get-available-versions', params=payload)
+    if glob['verbose']:
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not download version list.', r.status_code)
     return r.json()
@@ -71,6 +79,8 @@ def get_update_link(username, token, package, update):
                'to': update['to'],
                'apiVersion': 2}
     r = requests.get('https://www.factorio.com/updater/get-download-link', params=payload)
+    if glob['verbose']:
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not obtain download link.', r.status_code, update)
     return r.json()[0]
@@ -89,8 +99,15 @@ def fetch_update(output_path, url):
 
 def main():
     args = parser.parse_args()
+    glob['verbose'] = args.verbose
 
     j = get_updater_data(args.user, args.token)
+    if args.list_packages:
+        print('Available packages:')
+        for package in j.keys():
+            print "\t", package
+        return 0
+
     updates, latest = pick_updates(j, args.package, args.for_version, args.experimental)
 
     if not updates:
