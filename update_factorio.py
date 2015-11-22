@@ -40,7 +40,7 @@ def get_updater_data(user, token):
     payload = {'username': user, 'token': token, 'apiVersion': 2}
     r = requests.get('https://www.factorio.com/updater/get-available-versions', params=payload)
     if glob['verbose']:
-        print(r.url.replace(token, '<secret>'))
+        print r.url.replace(token, '<secret>')
     if r.status_code != 200:
         raise DownloadFailed('Could not download version list.', r.status_code)
     return r.json()
@@ -80,7 +80,7 @@ def get_update_link(username, token, package, update):
                'apiVersion': 2}
     r = requests.get('https://www.factorio.com/updater/get-download-link', params=payload)
     if glob['verbose']:
-        print(r.url.replace(token, '<secret>'))
+        print r.url.replace(token, '<secret>')
     if r.status_code != 200:
         raise DownloadFailed('Could not obtain download link.', r.status_code, update)
     return r.json()[0]
@@ -94,7 +94,7 @@ def fetch_update(output_path, url):
         for chunk in r.iter_content(8192):
             fd.write(chunk)
 
-    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
+    print 'Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath}
 
 
 def main():
@@ -103,7 +103,7 @@ def main():
 
     j = get_updater_data(args.user, args.token)
     if args.list_packages:
-        print('Available packages:')
+        print 'Available packages:'
         for package in j.keys():
             print "\t", package
         return 0
@@ -120,7 +120,7 @@ def main():
             message += ' Did you want `--experimental`?'
         else:
             message += ' (latest experimental is %s).' % latest[1]
-        print(message)
+        print message
         return 1
 
     for u in updates:
