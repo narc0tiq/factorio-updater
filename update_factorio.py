@@ -8,14 +8,14 @@ parser.add_argument('-d', '--dry-run', action='store_true', dest='dry_run',
 parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                     help="Print URLs and stuff as they happen.")
 parser.add_argument('-l', '--list-packages', action='store_true', dest='list_packages',
-                    help="Print a list of valid packages (e.g., 'core-linux64', etc.).")
+                    help="Print a list of valid packages (e.g., 'core-linux_headless64', etc.).")
 parser.add_argument('-u', '--user',
                     help="Your Factorio updater username, from player-data.json.")
 parser.add_argument('-t', '--token',
                     help="Your Factorio updater token, also from player-data.json.")
-parser.add_argument('-p', '--package', default='core-linux64',
+parser.add_argument('-p', '--package', default='core-linux_headless64',
                     help="Which Factorio package to look for updates for, "
-                    "e.g., core-linux64 for a 64-bit Linux Factorio. Use --list-packages to "
+                    "e.g., core-linux_headless64 for a 64-bit Linux headless Factorio. Use --list-packages to "
                     "fetch an updated list.")
 parser.add_argument('-f', '--for-version',
                     help="Which Factorio version you currently have, e.g., 0.12.2.")
@@ -104,7 +104,7 @@ def main():
     j = get_updater_data(args.user, args.token)
     if args.list_packages:
         print 'Available packages:'
-        for package in j.keys():
+        for package in j.viewkeys():
             print "\t", package
         return 0
 

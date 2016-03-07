@@ -15,33 +15,14 @@ figure out what's gone wrong.
 
 ---
 
-For the script to successfully connect to the Factorio updater API, you will
-need two key pieces of information: your updater username and API token. Both
-of these can be obtained from a working client copy of Factorio (like, say, the
-one you're using to play on your headless server).
-
-Look in your Factorio folder (e.g., `C:\Games\Factorio`), and find (and open)
-the file named `player-data.json`. Near the end of the file there will be some
-lines that look like this:
-
-```JSON
-    "updater-username": "Narc",
-    "updater-token": "xyz123abc456def789ghijklmnopqr"
-```
-
-You will want to keep both of these for use with the update script.
-
----
-
 From there, it's really simple: open a shell on the machine running your
-headless server, fetch the updater script, and run it. Here's an example
-session:
+headless server, fetch the updater script, and run it (try it with `--help`
+first!). Here's an example session:
 
 ```
 [narc@odin ~/src/factorio-updater]% python update_factorio.py --help
-usage: update_factorio.py [-h] [-d] [-u USER] [-t TOKEN]
-                          [-p {core-linux32,core-linux64,core-mac,core-win32,core-win64}]
-                          [-f FOR_VERSION] [-O OUTPUT_PATH] [-x]
+usage: update_factorio.py [-h] [-d] [-v] [-l] [-u USER] [-t TOKEN]
+                          [-p PACKAGE] [-f FOR_VERSION] [-O OUTPUT_PATH] [-x]
 
 Fetches Factorio update packages (e.g., for headless servers)
 
@@ -49,26 +30,34 @@ optional arguments:
   -h, --help            show this help message and exit
   -d, --dry-run         Don't download files, just state which updates would
                         be downloaded.
+  -v, --verbose         Print URLs and stuff as they happen.
+  -l, --list-packages   Print a list of valid packages (e.g., 'core-
+                        linux_headless64', etc.).
   -u USER, --user USER  Your Factorio updater username, from player-data.json.
   -t TOKEN, --token TOKEN
                         Your Factorio updater token, also from player-
                         data.json.
-  -p {core-linux32,core-linux64,core-mac,core-win32,core-win64}, --package {core-linux32,core-linux64,core-mac,core-win32,core-win64}
+  -p PACKAGE, --package PACKAGE
                         Which Factorio package to look for updates for, e.g.,
-                        core-linux64 for a 64-bit Linux Factorio.
+                        core-linux_headless64 for a 64-bit Linux headless
+                        Factorio. Use --list-packages to fetch an updated
+                        list.
   -f FOR_VERSION, --for-version FOR_VERSION
                         Which Factorio version you currently have, e.g.,
-                        0.12.2.
+                        0.12.25.
   -O OUTPUT_PATH, --output-path OUTPUT_PATH
                         Where to put downloaded files.
   -x, --experimental    Download experimental versions, too (otherwise only
                         stable updates are considered).
-[narc@odin ~/src/factorio-updater]% python update_factorio.py -u Narc -t xyz123abc456def789ghijklmnopqr -p core-linux64 -f 0.12.2 -x
-Wrote /tmp/core-linux64-0.12.2-0.12.3-update.zip, apply with `factorio --apply-update /tmp/core-linux64-0.12.2-0.12.3-update.zip`
+[narc@odin ~/src/factorio-updater]% python update_factorio.py -l
+Available packages:
+        core-linux_headless64
+[narc@odin ~/src/factorio-updater]% python update_factorio.py -p core-linux_headless64 -f 0.12.25 -x
+Wrote /tmp/core-linux_headless64-0.12.25-0.12.26-update.zip, apply with `factorio --apply-update /tmp/core-linux_headless64-0.12.25-0.12.26-update.zip`
 [narc@odin ~/src/factorio-updater]% cd ~/srv/factorio/bin/x64
-[narc@odin ~/srv/factorio/bin/x64]% ./factorio --apply-update /tmp/core-linux64-0.12.2-0.12.3-update.zip
+[narc@odin ~/srv/factorio/bin/x64]% ./factorio --apply-update /tmp/core-linux_headless64-0.12.25-0.12.26-update.zip
 [...stuff happens...]
-[narc@odin ~/srv/factorio/bin/x64]% rm /tmp/core-linux64-0.12.2-0.12.3-update.zip
+[narc@odin ~/srv/factorio/bin/x64]% rm /tmp/core-linux_headless64-0.12.26-0.12.26-update.zip
 ```
 
 
