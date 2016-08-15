@@ -80,7 +80,7 @@ def get_update_link(username, token, package, update):
                'from': update['from'],
                'to': update['to'],
                'apiVersion': 2}
-    r = requests.get('https://www.factorio.com/updater/get-download-link', params=payload)
+    r = requests.get('https://updater.factorio.com/get-download-link', params=payload)
     if glob['verbose']:
         print r.url.replace(token, '<secret>')
     if r.status_code != 200:
