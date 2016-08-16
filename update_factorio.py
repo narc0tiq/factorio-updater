@@ -40,7 +40,7 @@ def version_key(v):
 
 def get_updater_data(user, token):
     payload = {'username': user, 'token': token, 'apiVersion': 2}
-    r = requests.get('https://www.factorio.com/updater/get-available-versions', params=payload)
+    r = requests.get('https://updater.factorio.com/get-available-versions', params=payload)
     if glob['verbose']:
         print r.url.replace(token, '<secret>')
     if r.status_code != 200:
