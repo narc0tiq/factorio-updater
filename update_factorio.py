@@ -60,6 +60,12 @@ def pick_updates(updater_json, factorio_package, from_version, experimental=Fals
             latest[0] = row['stable']
             continue
 
+    # Get latest experimental version
+    if experimental:
+        for row in updater_json[factorio_package]:
+            if 'from' in row:
+                latest[1] = max(latest[1], row['to'], key=version_key)
+
     # Get available updates
     for row in updater_json[factorio_package]:
         if not experimental and 'from' in row and max(row['from'], current_version, key=version_key) == row['from'] and min(row['to'], latest[0], key=version_key) == row['to']:
