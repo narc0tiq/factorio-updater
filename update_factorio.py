@@ -75,7 +75,7 @@ def pick_updates(updater_json, factorio_package, from_version, experimental=Fals
 
         updates.append({'from': current_version, 'to': new_version})
         current_version = new_version
- 
+
     return updates, latest
 
 
