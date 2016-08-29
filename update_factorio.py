@@ -51,17 +51,35 @@ def get_updater_data(user, token):
 def pick_updates(updater_json, factorio_package, from_version, experimental=False):
     latest = [None, None]
     available_updates = {}
+    current_version = from_version
+    updates = []
+
+    # Get latest stable version
     for row in updater_json[factorio_package]:
         if 'from' not in row:
             latest[0] = row['stable']
             continue
-        available_updates[row['from']] = row['to']
 
-        latest[1] = max(latest[1], row['to'], key=version_key)
+    # Get latest experimental version
+    if experimental:
+        for row in updater_json[factorio_package]:
+            if 'from' in row:
+                latest[1] = max(latest[1], row['to'], key=version_key)
 
-    updates = []
+    # Get available updates
+    for row in updater_json[factorio_package]:
+        # if from_version >= current_version...
+        if 'from' in row and max(row['from'], current_version, key=version_key) == row['from']:
+            # ...and not experimental and to_version <= last_stable
+            if not experimental and min(row['to'], latest[0], key=version_key) == row['to']:
+                # record this update
+                available_updates[row['from']] = row['to']
+            # ...or if experimental
+            elif experimental:
+                # record this update
+                available_updates[row['from']] = row['to']
 
-    current_version = from_version
+    # Create update list
     while current_version in available_updates:
         new_version = available_updates[current_version]
         if not experimental and max(current_version, latest[0], key=version_key) == current_version:
