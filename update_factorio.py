@@ -72,9 +72,10 @@ def pick_updates(updater_json, factorio_package, from_version, experimental=Fals
         new_version = available_updates[current_version]
         if not experimental and max(current_version, latest[0], key=version_key) == current_version:
             break
-  
+
+        updates.append({'from': current_version, 'to': new_version})
         current_version = new_version
-    
+ 
     return updates, latest
 
 
