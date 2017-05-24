@@ -23,16 +23,17 @@ parser.add_argument('-t', '--token',
                     help="Your Factorio updater token, also from player-data.json.")
 parser.add_argument('-p', '--package', default='core-linux_headless64',
                     help="Which Factorio package to look for updates for, "
-                    "e.g., core-linux_headless64 for a 64-bit Linux headless Factorio. Use --list-packages to "
-                    "fetch an updated list.")
+                    "e.g., 'core-linux_headless64' for a 64-bit Linux headless Factorio. "
+                    "Use '--list-packages' to fetch an updated list.")
 parser.add_argument('-f', '--for-version',
-                    help="Which Factorio version you currently have, e.g., 0.12.2.")
+                    help="Which Factorio version you currently have, e.g., '0.12.2'. If empty, "
+                    "query the Factorio binary given in '--apply-to' for its version.")
 parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
+parser.add_argument('-a', '--apply-to', dest='apply_to',
+                    help="Apply the updates using the chosen binary.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
-parser.add_argument('--apply-to', dest='apply_to',
-                    help="Apply the updates using the chosen binary.")
 
 
 class DownloadFailed(Exception): pass
@@ -124,6 +125,16 @@ def fetch_update(output_path, url):
     return fpath
 
 
+def verbose_aware_exec(exec_args, verbose=False):
+    try:
+        captured = subprocess.check_output(exec_args, stderr=subprocess.STDOUT)
+        if verbose:
+            print(captured)
+    except subprocess.CalledProcessError as ex:
+        print(ex.output)
+        raise
+
+
 def main():
     args = parser.parse_args()
     glob['verbose'] = args.verbose
@@ -169,7 +180,7 @@ def main():
                 if args.apply_to is not None:
                     update_args = [args.apply_to, "--apply-update", fpath]
                     print("Applying update with `%s`." % (" ".join(update_args)))
-                    subprocess.check_call(update_args)
+                    verbose_aware_exec(update_args, args.verbose)
                 else:
                     print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
 
