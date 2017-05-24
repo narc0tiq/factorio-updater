@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os, posixpath, requests, re
 import argparse
+import subprocess
 try:
     import urllib.parse as url_parse
 except ImportError:
@@ -30,6 +31,8 @@ parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
+parser.add_argument('--apply-to', dest='apply_to',
+                    help="Apply the updates using the chosen binary.")
 
 
 class DownloadFailed(Exception): pass
@@ -133,10 +136,19 @@ def main():
             print("\t", package)
         return 0
 
-    updates, latest = pick_updates(j, args.package, args.for_version, args.experimental)
+    for_version = args.for_version
+
+    if for_version is None and args.apply_to is not None:
+        version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
+        source_version = re.match("Version: (\d+\.\d+\.\d+)", version_output)
+        if source_version:
+            for_version = source_version.group(1)
+            print("Auto-detected starting version as %s from binary." % for_version)
+
+    updates, latest = pick_updates(j, args.package, for_version, args.experimental)
 
     if not updates:
-        message = 'No updates available for version %s' % args.for_version
+        message = 'No updates available for version %s' % for_version
         if not args.experimental:
             if latest[0]:
                 message += ' (latest stable is %s).' % latest[0]
