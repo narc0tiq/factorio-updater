@@ -23,7 +23,7 @@ first!). Here's an example session:
 [narc@odin ~/src/factorio-updater]% python update_factorio.py --help
 usage: update_factorio.py [-h] [-d] [-v] [-l] [-u USER] [-t TOKEN]
                           [-p PACKAGE] [-f FOR_VERSION] [-O OUTPUT_PATH]
-                          [-a APPLY_TO] [-x]
+                          [-a APPLY_TO] [-D] [-x]
 
 Fetches Factorio update packages (e.g., for headless servers)
 
@@ -51,14 +51,22 @@ optional arguments:
                         Where to put downloaded files.
   -a APPLY_TO, --apply-to APPLY_TO
                         Apply the updates using the chosen binary.
+  -D, --delete-after-applying
+                        Delete update archives after successfully applying
+                        their contents. Ignored if '--apply-to' was not
+                        provided.
   -x, --experimental    Download experimental versions, too (otherwise only
                         stable updates are considered).
-[narc@odin ~/src/factorio-updater]% python update_factorio.py -a ~/srv/factorio/bin/x64/factorio -x
+[narc@odin ~/src/factorio-updater]% python3 update_factorio.py -xDa ~/srv/factorio/bin/x64/factorio
 Auto-detected starting version as 0.15.10 from binary.
 Applying update with `/home/narc/srv/factorio/bin/x64/factorio --apply-update /tmp/core-linux_headless64-0.15.10-0.15.11-update.zip`.
+Update applied, deleting temporary file /tmp/core-linux_headless64-0.15.10-0.15.11-update.zip.
 Applying update with `/home/narc/srv/factorio/bin/x64/factorio --apply-update /tmp/core-linux_headless64-0.15.11-0.15.12-update.zip`.
+Update applied, deleting temporary file /tmp/core-linux_headless64-0.15.11-0.15.12-update.zip.
 Applying update with `/home/narc/srv/factorio/bin/x64/factorio --apply-update /tmp/core-linux_headless64-0.15.12-0.15.13-update.zip`.
-[narc@odin ~/src/factorio-updater]% rm /tmp/core-linux_headless64-*
+Update applied, deleting temporary file /tmp/core-linux_headless64-0.15.12-0.15.13-update.zip.
+[narc@odin ~/src/factorio-updater]% ls /tmp/core-linux_headless64*
+zsh: no matches found: /tmp/core-linux_headless64*
 ```
 
 

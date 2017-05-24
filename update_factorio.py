@@ -32,6 +32,9 @@ parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
 parser.add_argument('-a', '--apply-to', dest='apply_to',
                     help="Apply the updates using the chosen binary.")
+parser.add_argument('-D', '--delete-after-applying', action='store_true', dest='delete_after_apply',
+                    help="Delete update archives after successfully applying their contents. "
+                    "Ignored if '--apply-to' was not provided.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
 
@@ -180,7 +183,12 @@ def main():
                 if args.apply_to is not None:
                     update_args = [args.apply_to, "--apply-update", fpath]
                     print("Applying update with `%s`." % (" ".join(update_args)))
+
                     verbose_aware_exec(update_args, args.verbose)
+
+                    if args.delete_after_apply:
+                        print('Update applied, deleting temporary file %s.' % fpath)
+                        os.unlink(fpath)
                 else:
                     print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
 
