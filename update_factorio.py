@@ -1,7 +1,12 @@
 #!/usr/bin/env python2
 
-import os, posixpath, requests, re, urlparse
+from __future__ import print_function
+import os, posixpath, requests, re
 import argparse
+try:
+    import urllib.parse as url_parse
+except ImportError:
+    import urlparse as url_parse
 
 
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
@@ -42,7 +47,7 @@ def get_updater_data(user, token):
     payload = {'username': user, 'token': token, 'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-available-versions', params=payload)
     if glob['verbose']:
-        print r.url.replace(token, '<secret>')
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not download version list.', r.status_code)
     return r.json()
@@ -100,21 +105,21 @@ def get_update_link(username, token, package, update):
                'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-download-link', params=payload)
     if glob['verbose']:
-        print r.url.replace(token, '<secret>')
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not obtain download link.', r.status_code, update)
     return r.json()[0]
 
 
 def fetch_update(output_path, url):
-    fname = posixpath.basename(urlparse.urlsplit(url).path)
+    fname = posixpath.basename(url_parse.urlsplit(url).path)
     fpath = os.path.join(output_path, fname)
     r = requests.get(url, stream=True, verify=False)
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
 
-    print 'Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath}
+    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
 
 
 def main():
@@ -123,9 +128,9 @@ def main():
 
     j = get_updater_data(args.user, args.token)
     if args.list_packages:
-        print 'Available packages:'
-        for package in j.viewkeys():
-            print "\t", package
+        print('Available packages:')
+        for package in j.keys():
+            print("\t", package)
         return 0
 
     updates, latest = pick_updates(j, args.package, args.for_version, args.experimental)
@@ -140,12 +145,12 @@ def main():
             message += ' Did you want `--experimental`?'
         else:
             message += ' (latest experimental is %s).' % latest[1]
-        print message
+        print(message)
         return 1
 
     for u in updates:
         if args.dry_run:
-            print 'Dry run: would have fetched update from %s to %s.' % (u['from'], u['to'])
+            print('Dry run: would have fetched update from %s to %s.' % (u['from'], u['to']))
         else:
             url = get_update_link(args.user, args.token, args.package, u)
             if url is not None:
