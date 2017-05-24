@@ -1,7 +1,13 @@
 #!/usr/bin/env python2
 
-import os, posixpath, requests, re, urlparse
+from __future__ import print_function
+import os, posixpath, requests, re
 import argparse
+import subprocess
+try:
+    import urllib.parse as url_parse
+except ImportError:
+    import urlparse as url_parse
 
 
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
@@ -25,6 +31,8 @@ parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
+parser.add_argument('--apply-to', dest='apply_to',
+                    help="Apply the updates using the chosen binary.")
 
 
 class DownloadFailed(Exception): pass
@@ -42,7 +50,7 @@ def get_updater_data(user, token):
     payload = {'username': user, 'token': token, 'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-available-versions', params=payload)
     if glob['verbose']:
-        print r.url.replace(token, '<secret>')
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not download version list.', r.status_code)
     return r.json()
@@ -100,21 +108,20 @@ def get_update_link(username, token, package, update):
                'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-download-link', params=payload)
     if glob['verbose']:
-        print r.url.replace(token, '<secret>')
+        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not obtain download link.', r.status_code, update)
     return r.json()[0]
 
 
 def fetch_update(output_path, url):
-    fname = posixpath.basename(urlparse.urlsplit(url).path)
+    fname = posixpath.basename(url_parse.urlsplit(url).path)
     fpath = os.path.join(output_path, fname)
     r = requests.get(url, stream=True, verify=False)
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
-
-    print 'Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath}
+    return fpath
 
 
 def main():
@@ -123,15 +130,24 @@ def main():
 
     j = get_updater_data(args.user, args.token)
     if args.list_packages:
-        print 'Available packages:'
-        for package in j.viewkeys():
-            print "\t", package
+        print('Available packages:')
+        for package in j.keys():
+            print("\t", package)
         return 0
 
-    updates, latest = pick_updates(j, args.package, args.for_version, args.experimental)
+    for_version = args.for_version
+
+    if for_version is None and args.apply_to is not None:
+        version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
+        source_version = re.match("Version: (\d+\.\d+\.\d+)", version_output)
+        if source_version:
+            for_version = source_version.group(1)
+            print("Auto-detected starting version as %s from binary." % for_version)
+
+    updates, latest = pick_updates(j, args.package, for_version, args.experimental)
 
     if not updates:
-        message = 'No updates available for version %s' % args.for_version
+        message = 'No updates available for version %s' % for_version
         if not args.experimental:
             if latest[0]:
                 message += ' (latest stable is %s).' % latest[0]
@@ -140,16 +156,22 @@ def main():
             message += ' Did you want `--experimental`?'
         else:
             message += ' (latest experimental is %s).' % latest[1]
-        print message
+        print(message)
         return 1
 
     for u in updates:
         if args.dry_run:
-            print 'Dry run: would have fetched update from %s to %s.' % (u['from'], u['to'])
+            print('Dry run: would have fetched update from %s to %s.' % (u['from'], u['to']))
         else:
             url = get_update_link(args.user, args.token, args.package, u)
             if url is not None:
-                fetch_update(args.output_path, url)
+                fpath = fetch_update(args.output_path, url)
+                if args.apply_to is not None:
+                    update_args = [args.apply_to, "--apply-update", fpath]
+                    print("Applying update with `%s`." % (" ".join(update_args)))
+                    subprocess.check_call(update_args)
+                else:
+                    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
 
 
 if __name__ == '__main__':
