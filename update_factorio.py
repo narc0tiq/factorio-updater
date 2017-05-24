@@ -18,9 +18,9 @@ parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
 parser.add_argument('-l', '--list-packages', action='store_true', dest='list_packages',
                     help="Print a list of valid packages (e.g., 'core-linux_headless64', etc.).")
 parser.add_argument('-u', '--user',
-                    help="Your Factorio updater username, from player-data.json.")
+                    help="Your Factorio service username, from player-data.json.")
 parser.add_argument('-t', '--token',
-                    help="Your Factorio updater token, also from player-data.json.")
+                    help="Your Factorio service token, also from player-data.json.")
 parser.add_argument('-p', '--package', default='core-linux_headless64',
                     help="Which Factorio package to look for updates for, "
                     "e.g., 'core-linux_headless64' for a 64-bit Linux headless Factorio. "

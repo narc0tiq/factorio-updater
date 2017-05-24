@@ -34,9 +34,9 @@ optional arguments:
   -v, --verbose         Print URLs and stuff as they happen.
   -l, --list-packages   Print a list of valid packages (e.g., 'core-
                         linux_headless64', etc.).
-  -u USER, --user USER  Your Factorio updater username, from player-data.json.
+  -u USER, --user USER  Your Factorio service username, from player-data.json.
   -t TOKEN, --token TOKEN
-                        Your Factorio updater token, also from player-
+                        Your Factorio service token, also from player-
                         data.json.
   -p PACKAGE, --package PACKAGE
                         Which Factorio package to look for updates for, e.g.,
@@ -68,6 +68,68 @@ Update applied, deleting temporary file /tmp/core-linux_headless64-0.15.12-0.15.
 [narc@odin ~/src/factorio-updater]% ls /tmp/core-linux_headless64*
 zsh: no matches found: /tmp/core-linux_headless64*
 ```
+
+
+## Service username and token ##
+
+The keen-eyed will have noticed the options for `--user` and `--token`. These
+allow you to supply a username and token normally used by the Factorio services
+(like the in-game updater and authenticated multiplayer). Having them will
+allow you to download (and potentially apply) more updates than unauthenticated
+checks.
+
+First, how to get them:
+* You must have a working (non-headless) Factorio client that you've used for
+multiplayer (like, say, the one you're using to play on your headless server).
+* You will need to find your
+[Factorio user data directory](https://wiki.factorio.com/Application_directory#User_Data_directory).
+There are two options for this (unless you've made changes explicitly):
+    * If you have the **standalone** download, the working directory is the
+    same as your Factorio data. It might be something like `C:\Games\Factorio`, or
+    maybe `~/Desktop/Factorio`.
+    * If you have the version with an **installer**, or **the Steam version**,
+    the working directory will be in your user profile's application data area:
+        * On Windows, `%APPDATA%\Factorio`
+        * On Linux, `~/.factorio`
+        * On OSX, `~/Library/Application Support/factorio`
+* From your user data directory, you will need the file named
+`player-data.json`. Open it with any editor capable of showing plain text files
+(e.g., Notepad).
+
+You are looking for lines like these:
+
+```JSON
+    "service-username": "Narc",
+    "service-token": "xyz123abc456def789ghijklmnopqr"
+```
+
+These are the username and token you can provide.
+
+
+### Why provide username and token? ###
+
+If you happen to have some desire to download updates for a non-headless
+version (not normally recommended, but sometimes needs must), you must
+authenticate to be able to see these updates. Here's an example session:
+
+```
+[narc@odin ~/src/factorio-updater]% python update_factorio.py -u Narc -t xyz123abc456def789ghijklmnopqr --list-packages
+Available packages:
+         core-win64
+         core-mac
+         core-linux_headless64
+         core-win32
+         core-linux32
+         core-linux64
+[narc@odin ~/src/factorio-updater]% mkdir update-packages
+[narc@odin ~/src/factorio-updater]% python update_factorio.py -u Narc -t xyz123abc456def789ghijklmnopqr -O update-packages -p core-win64 -f 0.14.23 -x
+Wrote update-packages/core-win64-0.14.23-0.15.1-update.zip, apply with `factorio --apply-update update-packages/core-win64-0.14.23-0.15.1-update.zip`
+Wrote update-packages/core-win64-0.15.1-0.15.2-update.zip, apply with `factorio --apply-update update-packages/core-win64-0.15.1-0.15.2-update.zip`
+[...]
+Wrote update-packages/core-win64-0.15.12-0.15.13-update.zip, apply with `factorio --apply-update update-packages/core-win64-0.15.12-0.15.13-update.zip`
+```
+
+You can now take any Factorio Windows 64-bit, version 0.14.23 and up, and apply the updates from the `update-packages` directory just like the in-game updater would.
 
 
 ## License ##
