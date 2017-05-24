@@ -121,8 +121,7 @@ def fetch_update(output_path, url):
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
-
-    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
+    return fpath
 
 
 def main():
@@ -166,7 +165,13 @@ def main():
         else:
             url = get_update_link(args.user, args.token, args.package, u)
             if url is not None:
-                fetch_update(args.output_path, url)
+                fpath = fetch_update(args.output_path, url)
+                if args.apply_to is not None:
+                    update_args = [args.apply_to, "--apply-update", fpath]
+                    print("Applying update with `%s`." % (" ".join(update_args)))
+                    subprocess.check_call(update_args)
+                else:
+                    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
 
 
 if __name__ == '__main__':
