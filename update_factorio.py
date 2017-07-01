@@ -156,7 +156,7 @@ def main():
             get_username_token(args.apply_to)
             print("No username or token provided, reading from player-data.json")
         else:
-            print("Username/Token not awailable")
+            print("Username/Token not available")
             exit()
 
     j = get_updater_data(glob['user'], glob['token'])
