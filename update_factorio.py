@@ -146,7 +146,8 @@ def get_username_token(factoriopath):
         glob['user'] = data["service-username"]
         glob['token'] = data["service-token"]   
     else:
-        print("player-data.json not found or unreadable, supply username/token if needed")
+        if glob['verbose']:
+            print("player-data.json not found or unreadable")
 
 def main():
     args = parser.parse_args()
@@ -157,8 +158,9 @@ def main():
         glob['token'] = args.token
     else:
         if args.apply_to:
+            if glob['verbose']:
+                print("No username/token provided, trying player-data.json")
             get_username_token(args.apply_to)
-            print("No username/token provided, reading from player-data.json")
         else:
             glob['user'] = None
             glob['token'] = None
