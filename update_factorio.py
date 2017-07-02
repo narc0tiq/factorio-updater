@@ -1,8 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import os, posixpath, requests, re
-import argparse
+import argparse, json
 import subprocess
 try:
     import urllib.parse as url_parse
@@ -42,7 +42,7 @@ parser.add_argument('-x', '--experimental', action='store_true', dest='experimen
 class DownloadFailed(Exception): pass
 
 
-glob = { 'verbose': False }
+glob = { 'verbose': False, 'user': '', 'token' : '' }
 
 def version_key(v):
     if v is None:
@@ -138,11 +138,34 @@ def verbose_aware_exec(exec_args, verbose=False):
         raise
 
 
+def get_username_token(factoriopath):
+    filepath = os.path.normpath(factoriopath + '/../../../player-data.json')
+    if os.path.isfile(filepath):
+        with open(filepath) as data_file:  
+            data = json.load(data_file)
+        glob['user'] = data["service-username"]
+        glob['token'] = data["service-token"]   
+    else:
+        if glob['verbose']:
+            print("player-data.json not found or unreadable")
+
 def main():
     args = parser.parse_args()
     glob['verbose'] = args.verbose
 
-    j = get_updater_data(args.user, args.token)
+    if args.user and args.token:
+        glob['user'] = args.user
+        glob['token'] = args.token
+    else:
+        if args.apply_to:
+            if glob['verbose']:
+                print("No username/token provided, trying player-data.json")
+            get_username_token(args.apply_to)
+        else:
+            glob['user'] = None
+            glob['token'] = None
+
+    j = get_updater_data(glob['user'], glob['token'])
     if args.list_packages:
         print('Available packages:')
         for package in j.keys():
@@ -177,7 +200,7 @@ def main():
         if args.dry_run:
             print('Dry run: would have fetched update from %s to %s.' % (u['from'], u['to']))
         else:
-            url = get_update_link(args.user, args.token, args.package, u)
+            url = get_update_link(glob['user'], glob['token'], args.package, u)
             if url is not None:
                 fpath = fetch_update(args.output_path, url)
                 if args.apply_to is not None:
