@@ -139,10 +139,14 @@ def verbose_aware_exec(exec_args, verbose=False):
 
 
 def get_username_token(factoriopath):
-    with open(os.path.normpath(factoriopath + '/../../../player-data.json')) as data_file:  
-        data = json.load(data_file)
-    glob['user'] = data["service-username"]
-    glob['token'] = data["service-token"]   
+    filepath = os.path.normpath(factoriopath + '/../../../player-data.json')
+    if os.path.isfile(filepath):
+        with open(filepath) as data_file:  
+            data = json.load(data_file)
+        glob['user'] = data["service-username"]
+        glob['token'] = data["service-token"]   
+    else:
+        print("player-data.json not found or unreadable, supply username/token if needed")
 
 def main():
     args = parser.parse_args()
@@ -154,10 +158,10 @@ def main():
     else:
         if args.apply_to:
             get_username_token(args.apply_to)
-            print("No username or token provided, reading from player-data.json")
+            print("No username/token provided, reading from player-data.json")
         else:
-            print("Username/Token not available")
-            exit()
+            glob['user'] = None
+            glob['token'] = None
 
     j = get_updater_data(glob['user'], glob['token'])
     if args.list_packages:
