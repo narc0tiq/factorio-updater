@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function
-import os, posixpath, requests, re
+import os, posixpath, requests, re, sys
 import argparse
 import subprocess
 try:
@@ -12,7 +12,8 @@ except ImportError:
 
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
 parser.add_argument('-d', '--dry-run', action='store_true', dest='dry_run',
-                    help="Don't download files, just state which updates would be downloaded.")
+                    help="Don't download files, just state which updates would be downloaded. "
+                    "A nonzero exit code indicates no updates were found (or an exception occurred).")
 parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                     help="Print URLs and stuff as they happen.")
 parser.add_argument('-l', '--list-packages', action='store_true', dest='list_packages',
@@ -138,6 +139,55 @@ def verbose_aware_exec(exec_args, verbose=False):
         raise
 
 
+def find_version(args):
+    if args.for_version is not None:
+        return args.for_version
+
+    if args.for_version is None and args.apply_to is not None:
+        version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
+        source_version = re.match("Version: (\d+\.\d+\.\d+)", version_output)
+        if source_version:
+            for_version = source_version.group(1)
+            print("Auto-detected starting version as %s from binary." % for_version)
+            return for_version
+
+
+def announce_no_updates(args, for_version, latest):
+    message = 'No updates available for version %s' % for_version
+    if not args.experimental:
+        if latest[0]:
+            message += ' (latest stable is %s).' % latest[0]
+        else:
+            message += '.'
+        message += ' Did you want `--experimental`?'
+    else:
+        message += ' (latest experimental is %s).' % latest[1]
+    print(message)
+
+
+def apply_update(args, update):
+    if args.dry_run:
+        print('Dry run: would have fetched update from %s to %s.' % (update['from'], update['to']))
+        return
+
+    url = get_update_link(args.user, args.token, args.package, update)
+    if url is None:
+        raise RuntimeError('Failed to obtain URL for update from %s to %s.' % (update['from'], update['to']))
+
+    fpath = fetch_update(args.output_path, url)
+    if args.apply_to is None:
+        print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
+        return
+
+    update_args = [args.apply_to, "--apply-update", fpath]
+    print("Applying update with `%s`." % (" ".join(update_args)))
+    verbose_aware_exec(update_args, args.verbose)
+
+    if args.delete_after_apply:
+        print('Update applied, deleting temporary file %s.' % fpath)
+        os.unlink(fpath)
+
+
 def main():
     args = parser.parse_args()
     glob['verbose'] = args.verbose
@@ -149,49 +199,27 @@ def main():
             print("\t", package)
         return 0
 
-    for_version = args.for_version
-
-    if for_version is None and args.apply_to is not None:
-        version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
-        source_version = re.match("Version: (\d+\.\d+\.\d+)", version_output)
-        if source_version:
-            for_version = source_version.group(1)
-            print("Auto-detected starting version as %s from binary." % for_version)
+    for_version = find_version(args)
+    if not for_version:
+        print("Unable to determine source version. Please provide either a "
+            "starting version (with --for-version) or a Factorio binary (with "
+            "--apply-to).")
+        return 1
 
     updates, latest = pick_updates(j, args.package, for_version, args.experimental)
 
     if not updates:
-        message = 'No updates available for version %s' % for_version
-        if not args.experimental:
-            if latest[0]:
-                message += ' (latest stable is %s).' % latest[0]
-            else:
-                message += '.'
-            message += ' Did you want `--experimental`?'
-        else:
-            message += ' (latest experimental is %s).' % latest[1]
-        print(message)
-        return 1
+        announce_no_updates(args, for_version, latest)
+        return 2
 
     for u in updates:
-        if args.dry_run:
-            print('Dry run: would have fetched update from %s to %s.' % (u['from'], u['to']))
-        else:
-            url = get_update_link(args.user, args.token, args.package, u)
-            if url is not None:
-                fpath = fetch_update(args.output_path, url)
-                if args.apply_to is not None:
-                    update_args = [args.apply_to, "--apply-update", fpath]
-                    print("Applying update with `%s`." % (" ".join(update_args)))
+        apply_update(args, u)
 
-                    verbose_aware_exec(update_args, args.verbose)
-
-                    if args.delete_after_apply:
-                        print('Update applied, deleting temporary file %s.' % fpath)
-                        os.unlink(fpath)
-                else:
-                    print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
+    # No updates remain; if an update failed, we will have exceptioned
+    # out before getting here.
+    # In dry-run mode, this simply signifies that updates were found.
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
