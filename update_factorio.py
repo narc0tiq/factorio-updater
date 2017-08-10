@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function
-import os, posixpath, requests, re
+import os, posixpath, requests, re, sys
 import argparse
 import subprocess
 try:
@@ -171,7 +171,6 @@ def main():
         else:
             message += ' (latest experimental is %s).' % latest[1]
         print(message)
-        return 1
 
     for u in updates:
         if args.dry_run:
@@ -191,7 +190,11 @@ def main():
                         os.unlink(fpath)
                 else:
                     print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
+    return len(updates)
+
 
 
 if __name__ == '__main__':
-    main()
+    return_code = main()
+
+    sys.exit(return_code)
