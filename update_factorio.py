@@ -171,6 +171,12 @@ def main():
         else:
             message += ' (latest experimental is %s).' % latest[1]
         print(message)
+        if args.dry_run:
+            # if dry run and no update
+            return 0
+        else
+            # you have nothing to update (previous behavior)
+            return 1
 
     for u in updates:
         if args.dry_run:
@@ -190,8 +196,12 @@ def main():
                         os.unlink(fpath)
                 else:
                     print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
-    return len(updates)
-
+        if args.dry_run:
+            # count updates
+			return len(updates)
+		else:
+			#all sucessfully updated
+			return 0
 
 
 if __name__ == '__main__':
