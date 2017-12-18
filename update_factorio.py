@@ -54,10 +54,13 @@ def version_key(v):
 def get_updater_data(user, token):
     payload = {'username': user, 'token': token, 'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-available-versions', params=payload)
-    if glob['verbose']:
-        print(r.url.replace(token, '<secret>'))
     if r.status_code != 200:
         raise DownloadFailed('Could not download version list.', r.status_code)
+    if glob['verbose']:
+        if token is not None:
+            print(r.url.replace(token, '<secret>'))
+        else:
+            print(r.url)
     return r.json()
 
 
@@ -113,7 +116,10 @@ def get_update_link(username, token, package, update):
                'apiVersion': 2}
     r = requests.get('https://updater.factorio.com/get-download-link', params=payload)
     if glob['verbose']:
-        print(r.url.replace(token, '<secret>'))
+        if token is not None:
+            print(r.url.replace(token, '<secret>'))
+        else:
+            print(r.url)
     if r.status_code != 200:
         raise DownloadFailed('Could not obtain download link.', r.status_code, update)
     return r.json()[0]
