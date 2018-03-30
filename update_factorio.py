@@ -38,6 +38,9 @@ parser.add_argument('-D', '--delete-after-applying', action='store_true', dest='
                     "Ignored if '--apply-to' was not provided.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
+parser.add_argument('-I', '--ignore-existing', action='store_true', dest='ignore_existing_files',
+                    help="Ignore files that have already been downloaded, and re-download them. "
+                    "Use in case of a broken download that was wrongly retained.")
 
 
 class DownloadFailed(Exception): pass
@@ -125,13 +128,20 @@ def get_update_link(username, token, package, update):
     return r.json()[0]
 
 
-def fetch_update(output_path, url):
+def fetch_update(output_path, url, ignore_existing_files):
     fname = posixpath.basename(url_parse.urlsplit(url).path)
     fpath = os.path.join(output_path, fname)
+
+    if os.path.isfile(fpath) and ignore_existing_files is not True:
+        if glob['verbose']:
+            print("File %s already exists, assuming it's correct..." % fpath)
+        return fpath # early out, we must've already downloaded it
+
     r = requests.get(url, stream=True, verify=False)
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
+
     return fpath
 
 
@@ -180,7 +190,7 @@ def apply_update(args, update):
     if url is None:
         raise RuntimeError('Failed to obtain URL for update from %s to %s.' % (update['from'], update['to']))
 
-    fpath = fetch_update(args.output_path, url)
+    fpath = fetch_update(args.output_path, url, args.ignore_existing_files)
     if args.apply_to is None:
         print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
         return
