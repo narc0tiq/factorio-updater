@@ -137,7 +137,7 @@ def fetch_update(output_path, url, ignore_existing_files):
             print("File %s already exists, assuming it's correct..." % fpath)
         return fpath # early out, we must've already downloaded it
 
-    r = requests.get(url, stream=True, verify=False)
+    r = requests.get(url, stream=True)
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
