@@ -1,9 +1,6 @@
-Factorio Update Helper is released under the MIT license.  Informally, this
-means you can do basically whatever with it you like, as long as you leave this
-file intact.  The full legalese is below.
+MIT license
 
-
-Factorio Update Helper is Copyright (c) 2015 Octav "narc" Sandulescu
+Copyright (c) 2015 Octav "narc" Sandulescu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
