@@ -9,6 +9,11 @@ try:
 except ImportError:
     import urlparse as url_parse
 
+def file_path(string):
+    if os.path.isfile(string):
+        return string
+    else:
+        raise Exception(string + " is not a valid path to a file.")
 
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
 parser.add_argument('-d', '--dry-run', action='store_true', dest='dry_run',
@@ -31,7 +36,7 @@ parser.add_argument('-f', '--for-version',
                     "query the Factorio binary given in '--apply-to' for its version.")
 parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
-parser.add_argument('-a', '--apply-to', dest='apply_to',
+parser.add_argument('-a', '--apply-to', type=file_path, dest='apply_to',
                     help="Apply the updates using the chosen binary.")
 parser.add_argument('-D', '--delete-after-applying', action='store_true', dest='delete_after_apply',
                     help="Delete update archives after successfully applying their contents. "
