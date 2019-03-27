@@ -9,6 +9,11 @@ try:
 except ImportError:
     import urlparse as url_parse
 
+def dir_path(string):
+    if os.path.isdir(string):
+        return string
+    else:
+        raise Exception(string + " is not a valid path.")
 
 parser = argparse.ArgumentParser(description="Fetches Factorio update packages (e.g., for headless servers)")
 parser.add_argument('-d', '--dry-run', action='store_true', dest='dry_run',
@@ -29,6 +34,8 @@ parser.add_argument('-p', '--package', default='core-linux_headless64',
 parser.add_argument('-f', '--for-version',
                     help="Which Factorio version you currently have, e.g., '0.12.2'. If empty, "
                     "query the Factorio binary given in '--apply-to' for its version.")
+parser.add_argument('-g', '--glib-location', type=dir_path, dest='glib_location',
+                    help="Optionally specify a different location for GLib library.")
 parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
 parser.add_argument('-a', '--apply-to', dest='apply_to',
@@ -154,13 +161,28 @@ def verbose_aware_exec(exec_args, verbose=False):
         print(ex.output)
         raise
 
+def get_glib(args):
+    glib = re.search(r"glibc-(\d+.\d+)", args.glib_location)
+    if (glib):
+        # "/opt/glibc-2.18/lib/ld-2.18.so --library-path /opt/glibc-2.18/lib"
+        return [os.path.join(args.glib_location, "ld-" + glib.group(1) + ".so"), "--library-path", args.glib_location]
+    else:
+        raise Exception("GLIB location \"" + args.glib_location + "\" is not valid. Example: /opt/glibc-2.18/lib")
+
+def get_factorio(args):
+    factorio_args = [args.apply_to]
+
+    # If we use a custom glib location, add it to the command
+    if args.glib_location:
+        factorio_args = get_glib(args) + factorio_args
+    return factorio_args
 
 def find_version(args):
     if args.for_version is not None:
         return args.for_version
 
     if args.for_version is None and args.apply_to is not None:
-        version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
+        version_output = subprocess.check_output(get_factorio(args) + ["--version"], universal_newlines=True)
         source_version = re.search("Version: (\d+\.\d+\.\d+)", version_output)
         if source_version:
             for_version = source_version.group(1)
@@ -195,7 +217,7 @@ def apply_update(args, update):
         print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
         return
 
-    update_args = [args.apply_to, "--apply-update", fpath]
+    update_args = get_factorio(args) + ["--apply-update", fpath, "--executable-path", args.apply_to]
     print("Applying update with `%s`." % (" ".join(update_args)))
     verbose_aware_exec(update_args, args.verbose)
 

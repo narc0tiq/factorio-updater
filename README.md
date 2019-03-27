@@ -47,6 +47,9 @@ optional arguments:
                         Which Factorio version you currently have, e.g.,
                         '0.12.2'. If empty, query the Factorio binary given in
                         '--apply-to' for its version.
+  -g GLIB_LOCATION, --glib-location GLIB_LOCATION
+                        Optionally specify a different location for GLib
+                        library.
   -O OUTPUT_PATH, --output-path OUTPUT_PATH
                         Where to put downloaded files.
   -a APPLY_TO, --apply-to APPLY_TO
