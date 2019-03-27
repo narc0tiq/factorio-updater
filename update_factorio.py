@@ -9,6 +9,12 @@ try:
 except ImportError:
     import urlparse as url_parse
 
+def file_path(string):
+    if os.path.isfile(string):
+        return string
+    else:
+        raise Exception(string + " is not a valid path to a file.")
+
 def dir_path(string):
     if os.path.isdir(string):
         return string
@@ -38,7 +44,7 @@ parser.add_argument('-g', '--glib-location', type=dir_path, dest='glib_location'
                     help="Optionally specify a different location for GLib library.")
 parser.add_argument('-O', '--output-path', default='/tmp',
                     help="Where to put downloaded files.")
-parser.add_argument('-a', '--apply-to', dest='apply_to',
+parser.add_argument('-a', '--apply-to', type=file_path, dest='apply_to',
                     help="Apply the updates using the chosen binary.")
 parser.add_argument('-D', '--delete-after-applying', action='store_true', dest='delete_after_apply',
                     help="Delete update archives after successfully applying their contents. "
