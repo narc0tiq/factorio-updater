@@ -151,7 +151,7 @@ def fetch_update(output_path, url, ignore_existing_files, verify_zip):
 
     if os.path.isfile(fpath) and ignore_existing_files is not True:
         if verify_zip:
-            if zip_valid(fname):
+            if zip_valid(fpath):
                 if glob['verbose']:
                     print("File %s already exists and is a valid zip file" % fpath)
                 return fpath # early out, we must've already downloaded it
@@ -166,10 +166,13 @@ def fetch_update(output_path, url, ignore_existing_files, verify_zip):
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
+        
+        fd.flush()
+        fd.seek(0, os.SEEK_SET)
 
-    if verify_zip:
-        if not zip_valid(fname):
-            raise RuntimeError('Downloaded file %s was not a valid zip file' % fpath)
+        if verify_zip:
+            if not zip_valid(fd):
+                raise RuntimeError('Downloaded file %s was not a valid zip file' % fpath)
 
     return fpath
 
