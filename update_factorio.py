@@ -4,6 +4,7 @@ from __future__ import print_function
 import os, posixpath, requests, re, sys
 import argparse
 import subprocess
+from zipfile import ZipFile
 try:
     import urllib.parse as url_parse
 except ImportError:
@@ -43,6 +44,8 @@ parser.add_argument('-D', '--delete-after-applying', action='store_true', dest='
                     "Ignored if '--apply-to' was not provided.")
 parser.add_argument('-x', '--experimental', action='store_true', dest='experimental',
                     help="Download experimental versions, too (otherwise only stable updates are considered).")
+parser.add_argument('-z', '--verify-zip', action='store_true', dest='verify_zip',
+                    help="Verify the zip file after downloading.")
 parser.add_argument('-I', '--ignore-existing', action='store_true', dest='ignore_existing_files',
                     help="Ignore files that have already been downloaded, and re-download them. "
                     "Use in case of a broken download that was wrongly retained.")
@@ -133,19 +136,43 @@ def get_update_link(username, token, package, update):
     return r.json()[0]
 
 
-def fetch_update(output_path, url, ignore_existing_files):
+def zip_valid(fpath):
+    with ZipFile(fpath,'r') as zf:
+        if zf.testzip() is not None:
+            zf.close()
+            os.unlink(fpath)
+            return False
+    return True
+
+
+def fetch_update(output_path, url, ignore_existing_files, verify_zip):
     fname = posixpath.basename(url_parse.urlsplit(url).path)
     fpath = os.path.join(output_path, fname)
 
     if os.path.isfile(fpath) and ignore_existing_files is not True:
-        if glob['verbose']:
-            print("File %s already exists, assuming it's correct..." % fpath)
-        return fpath # early out, we must've already downloaded it
+        if verify_zip:
+            if zip_valid(fpath):
+                if glob['verbose']:
+                    print("File %s already exists and is a valid zip file" % fpath)
+                return fpath # early out, we must've already downloaded it
+            else:
+                pass # fall through to try and download it again.
+        else:
+            if glob['verbose']:
+                print("File %s already exists, assuming it's correct..." % fpath)
+            return fpath # early out, we must've already downloaded it
 
     r = requests.get(url, stream=True)
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
             fd.write(chunk)
+        
+        fd.flush()
+        fd.seek(0, os.SEEK_SET)
+
+        if verify_zip:
+            if not zip_valid(fd):
+                raise RuntimeError('Downloaded file %s was not a valid zip file' % fpath)
 
     return fpath
 
@@ -166,7 +193,7 @@ def find_version(args):
 
     if args.for_version is None and args.apply_to is not None:
         version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
-        source_version = re.search(r"Version: (\d+\.\d+\.\d+)", version_output)
+        source_version = re.search("Version: (\d+\.\d+\.\d+)", version_output)
         if source_version:
             for_version = source_version.group(1)
             print("Auto-detected starting version as %s from binary." % for_version)
@@ -195,7 +222,7 @@ def apply_update(args, update):
     if url is None:
         raise RuntimeError('Failed to obtain URL for update from %s to %s.' % (update['from'], update['to']))
 
-    fpath = fetch_update(args.output_path, url, args.ignore_existing_files)
+    fpath = fetch_update(args.output_path, url, args.ignore_existing_files, args.verify_zip)
     if args.apply_to is None:
         print('Wrote %(fpath)s, apply with `factorio --apply-update %(fpath)s`' % {'fpath': fpath})
         return
