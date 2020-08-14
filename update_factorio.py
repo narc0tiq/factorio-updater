@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os, posixpath, requests, re, sys
 import argparse
+import json
 import subprocess
 from zipfile import ZipFile
 try:
@@ -24,10 +25,12 @@ parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                     help="Print URLs and stuff as they happen.")
 parser.add_argument('-l', '--list-packages', action='store_true', dest='list_packages',
                     help="Print a list of valid packages (e.g., 'core-linux_headless64', etc.).")
+parser.add_argument('-c', '--credentials-file', type=file_path, dest='credentials_file',
+                    help="Path to server-settings.json or player-data.json, for loading credentials.")
 parser.add_argument('-u', '--user',
-                    help="Your Factorio service username, from player-data.json.")
+                    help="Your Factorio service username, from server-settings.json or player-data.json.")
 parser.add_argument('-t', '--token',
-                    help="Your Factorio service token, also from player-data.json.")
+                    help="Your Factorio service token, also from server-settings.json or player-data.json.")
 parser.add_argument('-p', '--package', default='core-linux_headless64',
                     help="Which Factorio package to look for updates for, "
                     "e.g., 'core-linux_headless64' for a 64-bit Linux headless Factorio. "
@@ -236,11 +239,29 @@ def apply_update(args, update):
         os.unlink(fpath)
 
 
+def parse_credentials(credentials_file: str, user: str, token: str):
+    """Get credentials from CLI arguments."""
+    if credentials_file is not None:
+        try:
+            with open(credentials_file, 'r') as f:
+                credentials_json = json.load(f)
+            user = user or credentials_json.get('username', user)
+            token = token or credentials_json.get('token', token)
+        except IOError:
+            print("Can't read file %(fpath)s" % {'fpath': credentials_json})
+            raise
+        except json.JSONDecodeError:
+            print("Can't decode JSON in %(fpath)s" % {'fpath': credentials_json})
+            raise
+    return (user, token)
+
+
 def main():
     args = parser.parse_args()
     glob['verbose'] = args.verbose
 
-    j = get_updater_data(args.user, args.token)
+    creds = parse_credentials(args.credentials_file, args.user, args.token)
+    j = get_updater_data(*creds)
     if args.list_packages:
         print('Available packages:')
         for package in j.keys():
