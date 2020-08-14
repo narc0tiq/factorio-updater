@@ -5,7 +5,7 @@ the update with minimal downtime.
 
 ## Usage ##
 
-This is a Python 2/3 script using a single non-standard library,
+This is a Python 3 script using a single non-standard library,
 [Requests](http://requests.readthedocs.org/en/latest/).
 
 To install the required dependency, you should need do no more than run `pip
