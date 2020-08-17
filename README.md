@@ -34,10 +34,11 @@ optional arguments:
   -v, --verbose         Print URLs and stuff as they happen.
   -l, --list-packages   Print a list of valid packages (e.g., 'core-
                         linux_headless64', etc.).
-  -u USER, --user USER  Your Factorio service username, from player-data.json.
+  -u USER, --user USER  Your Factorio service username, from
+                        server-settings.json or player-data.json.
   -t TOKEN, --token TOKEN
-                        Your Factorio service token, also from player-
-                        data.json.
+                        Your Factorio service token, also from
+                        server-settings.json or player-data.json.
   -p PACKAGE, --package PACKAGE
                         Which Factorio package to look for updates for, e.g.,
                         'core-linux_headless64' for a 64-bit Linux headless
@@ -78,9 +79,17 @@ allow you to supply a username and token normally used by the Factorio services
 allow you to download (and potentially apply) more updates than unauthenticated
 checks.
 
-First, how to get them:
-* You must have a working (non-headless) Factorio client that you've used for
-multiplayer (like, say, the one you're using to play on your headless server).
+### Where are they? ###
+
+The username and token may be present in your `server-settings.json` or in a
+Factorio client's `player-data.json`. As the server owner, you would have put
+them into the `server-settings.json` in the first place, so we'll document
+where they live on the client:
+
+* The Factorio client must have been used to login to the Factorio API (e.g.,
+to allow use of the mod portal, multiplayer, or in-game updates). The game
+normally asks you to do so on the first install, otherwise you may find the
+option in **Settings** -> **Other**.
 * You will need to find your
 [Factorio user data directory](https://wiki.factorio.com/Application_directory#User_Data_directory).
 There are two options for this (unless you've made changes explicitly):
