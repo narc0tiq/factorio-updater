@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 import os, posixpath, requests, re, sys
 import argparse
 import json
 import subprocess
 from zipfile import ZipFile
-try:
-    import urllib.parse as url_parse
-except ImportError:
-    import urlparse as url_parse
+import urllib.parse as url_parse
+
 
 def file_path(string):
     if os.path.isfile(string):
