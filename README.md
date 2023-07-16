@@ -34,6 +34,9 @@ optional arguments:
   -v, --verbose         Print URLs and stuff as they happen.
   -l, --list-packages   Print a list of valid packages (e.g., 'core-
                         linux_headless64', etc.).
+  -c CREDENTIALS_FILE, --credentials-file CREDENTIALS_FILE
+                        Path to server-settings.json or player-data.json, for
+                        loading credentials.
   -u USER, --user USER  Your Factorio service username, from
                         server-settings.json or player-data.json.
   -t TOKEN, --token TOKEN

@@ -261,8 +261,8 @@ def main():
     args = parser.parse_args()
     glob['verbose'] = args.verbose
 
-    creds = parse_credentials(args.credentials_file, args.user, args.token)
-    j = get_updater_data(*creds)
+    (args.user, args.token) = parse_credentials(args.credentials_file, args.user, args.token)
+    j = get_updater_data(args.user, args.token)
     if args.list_packages:
         print('Available packages:')
         for package in j.keys():
