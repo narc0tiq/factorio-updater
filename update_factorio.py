@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, posixpath, requests, re, sys
+import tempfile
 import argparse
 import json
 import subprocess
@@ -35,7 +36,7 @@ parser.add_argument('-p', '--package', default='core-linux_headless64',
 parser.add_argument('-f', '--for-version',
                     help="Which Factorio version you currently have, e.g., '0.12.2'. If empty, "
                     "query the Factorio binary given in '--apply-to' for its version.")
-parser.add_argument('-O', '--output-path', default='/tmp',
+parser.add_argument('-O', '--output-path', default=tempfile.gettempdir(),
                     help="Where to put downloaded files.")
 parser.add_argument('-a', '--apply-to', type=file_path, dest='apply_to',
                     help="Apply the updates using the chosen binary.")
