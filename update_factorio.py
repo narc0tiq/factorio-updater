@@ -193,7 +193,7 @@ def find_version(args):
 
     if args.for_version is None and args.apply_to is not None:
         version_output = subprocess.check_output([args.apply_to, "--version"], universal_newlines=True)
-        source_version = re.search("Version: (\d+\.\d+\.\d+)", version_output)
+        source_version = re.search("Version: (\\d+\\.\\d+\\.\\d+)", version_output)
         if source_version:
             for_version = source_version.group(1)
             print("Auto-detected starting version as %s from binary." % for_version)
