@@ -146,7 +146,7 @@ You can now take any Factorio Windows 64-bit, version 0.14.23 and up, and apply 
 
 ## License ##
 
-The source of **Factorio Update Helper** is Copyright 2015-2017 Octav "narc"
+The source of **Factorio Update Helper** is Copyright 2015-2024 Octav "narc"
 Sandulescu. It is licensed under the [MIT license][mit], available in this
 package in the file [LICENSE.md](LICENSE.md).
 
