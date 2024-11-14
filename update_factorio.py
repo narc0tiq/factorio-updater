@@ -5,6 +5,7 @@ import tempfile
 import argparse
 import json
 import subprocess
+import time
 from zipfile import ZipFile
 import urllib.parse as url_parse
 import time
@@ -252,6 +253,14 @@ def apply_update(args, update):
     update_args = [args.apply_to, "--apply-update", fpath]
     print("Applying update with `%s`." % (" ".join(update_args)))
     verbose_aware_exec(update_args, args.verbose)
+
+    if os.name == "nt":
+        from psutil import process_iter
+
+        print("Waiting for slave process to exit...")
+        while any(p.name() == "Factorio.exe" for p in process_iter()):
+            # Slave process is still running
+            time.sleep(0.5)
 
     if args.delete_after_apply:
         print('Update applied, deleting temporary file %s.' % fpath)
