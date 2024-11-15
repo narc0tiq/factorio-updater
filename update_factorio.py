@@ -7,6 +7,7 @@ import json
 import subprocess
 from zipfile import ZipFile
 import urllib.parse as url_parse
+import time
 
 
 def file_path(string):
@@ -164,13 +165,33 @@ def fetch_update(output_path, url, ignore_existing_files, verify_zip):
             return fpath # early out, we must've already downloaded it
 
     r = requests.get(url, stream=True)
+    
+    total_size = int(r.headers.get('content-length', 0)) # get content length
+    downloaded_size = 0
+    bar_width = 50     # could use os.get_terminal_size().columns to adapt the screen width
+    start_time = time.time()  # time of start download
     with open(fpath, 'wb') as fd:
         for chunk in r.iter_content(8192):
-            fd.write(chunk)
+            if chunk:
+                fd.write(chunk)
+                downloaded_size += len(chunk)
+
+                # calculate download speed
+                elapsed_time = time.time() - start_time
+                if elapsed_time > 0:
+                    download_speed = downloaded_size / elapsed_time
+
+            if total_size == 0:
+                bar_block = 0
+            else:
+                bar_block = int(bar_width * downloaded_size / total_size)
+            
+            print(f"\r[{'█' * bar_block}{' ' * (bar_width - bar_block)}] {downloaded_size / 2 ** 20:.2f}/{total_size / 2 ** 20:.2f} MiB  {download_speed / 2 ** 20:.2f} MiB/s", end='')
 
         fd.flush()
         fd.seek(0, os.SEEK_SET)
-
+        
+        print("\nDownload Success")
         if verify_zip:
             if not zip_valid(fd):
                 raise RuntimeError('Downloaded file %s was not a valid zip file' % fpath)
