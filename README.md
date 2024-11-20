@@ -5,8 +5,9 @@ the update with minimal downtime.
 
 ## Usage ##
 
-This is a Python 3 script using a single non-standard library,
-[Requests](http://requests.readthedocs.org/en/latest/). On Windows it also requires [psutil](https://psutil.readthedocs.io/en/latest/).
+This is a Python 3 script using minimal requirements:
+* [Requests](http://requests.readthedocs.org/en/latest/)
+* [psutil](https://psutil.readthedocs.io/en/latest/) (only on Windows)
 
 To install the required dependencies, you should need do no more than run `pip
 install -r requirements.txt`. If this
