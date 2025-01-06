@@ -166,7 +166,7 @@ def fetch_update(output_path, url, ignore_existing_files, verify_zip):
             return fpath # early out, we must've already downloaded it
 
     r = requests.get(url, stream=True)
-    
+
     total_size = int(r.headers.get('content-length', 0)) # get content length
     downloaded_size = 0
     bar_width = 50     # could use os.get_terminal_size().columns to adapt the screen width
@@ -186,12 +186,12 @@ def fetch_update(output_path, url, ignore_existing_files, verify_zip):
                 bar_block = 0
             else:
                 bar_block = int(bar_width * downloaded_size / total_size)
-            
+
             print(f"\r[{'█' * bar_block}{' ' * (bar_width - bar_block)}] {downloaded_size / 2 ** 20:.2f}/{total_size / 2 ** 20:.2f} MiB  {download_speed / 2 ** 20:.2f} MiB/s", end='')
 
         fd.flush()
         fd.seek(0, os.SEEK_SET)
-        
+
         print("\nDownload Success")
         if verify_zip:
             if not zip_valid(fd):
@@ -311,7 +311,8 @@ def main():
 
     if not updates:
         announce_no_updates(args, for_version, latest)
-        return 2
+        # no update should not return "INVALIDARGUMENT", it should return SUCCESS
+        return 0
 
     for u in updates:
         apply_update(args, u)
